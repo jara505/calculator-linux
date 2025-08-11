@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora de Particiones Linux</title>
+<style>
+  :root {
+    --bg: #121212;
+    --text: #eee;
+    --accent: #4caf50;
+    --input-bg: #1e1e1e;
+    --input-border: #333;
+    --error: #f44336;
+  }
+  body {
+    margin: 0; padding: 1rem;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    align-items: center;
+  }
+  h1 {
+    margin-bottom: 1rem;
+  }
+  form {
+    background: var(--input-bg);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+  }
+  input[type=number] {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 1rem;
+  }
+  button {
+    background-color: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #388e3c;
+  }
+  .result {
+    margin-top: 1.5rem;
+    background: var(--input-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text);
+  }
+  th, td {
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid #333;
+    text-align: left;
+  }
+  .error {
+    color: var(--error);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  @media (max-width: 450px) {
+    body {
+      padding: 1rem 0.5rem;
+    }
+    form, .result {
+      max-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>Calculadora de Particiones Linux</h1>
+  <form id="partitionForm" autocomplete="off" novalidate>
+    <label for="diskSize">Tamaño total del disco (GB):</label>
+    <input type="number" id="diskSize" min="10" step="1" required placeholder="Ej: 500" />
+
+    <label for="ramSize">Cantidad de RAM (GB, opcional):</label>
+    <input type="number" id="ramSize" min="1" step="1" placeholder="Ej: 6" />
+
+    <button type="submit">Calcular</button>
+    <div class="error" id="errorMsg"></div>
+  </form>
+
+  <div class="result" id="result" style="display:none;">
+    <h2>Recomendación de particiones</h2>
+    <table>
+      <thead>
+        <tr><th>Partición</th><th>Tamaño recomendado</th><th>Sistema de archivos</th></tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+    <p style="margin-top: 0.8rem; font-size: 0.9rem; color: #aaa;">
+      Nota: <code>/</code> es la partición raíz del sistema.
+    </p>
+  </div>
+
+<script>
+  const form = document.getElementById('partitionForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const resultDiv = document.getElementById('result');
+  const resultBody = document.getElementById('resultBody');
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+    resultDiv.style.display = 'none';
+    resultBody.innerHTML = '';
+
+    const diskSize = parseInt(form.diskSize.value);
+    if (isNaN(diskSize) || diskSize < 10) {
+      errorMsg.textContent = 'Ingresa un tamaño de disco válido (mínimo 10 GB).';
+      return;
+    }
+
+    let ramSize = parseInt(form.ramSize.value);
+    if (isNaN(ramSize) || ramSize < 1) {
+      ramSize = 4;
+    }
+
+    // Cálculo swap según RAM con tope 20% disco
+    let swapSize;
+    if (ramSize <= 4) {
+      swapSize = ramSize * 2;
+    } else if (ramSize <= 16) {
+      swapSize = Math.min(ramSize, 8);
+    } else {
+      swapSize = 8;
+    }
+    if (swapSize > diskSize * 0.2) swapSize = Math.floor(diskSize * 0.2);
+
+    let rootSize = 25;
+    if (diskSize < 100) rootSize = 15;
+
+    let homeSize = diskSize - swapSize - rootSize;
+    if (homeSize < 5) {
+      errorMsg.textContent = 'Espacio insuficiente para /home después de asignar swap y raíz.';
+      return;
+    }
+
+    const partitions = [
+      {name: 'swap', size: swapSize, fs: 'swap'},
+      {name: '/', size: rootSize, fs: 'ext4'},
+      {name: '/home', size: homeSize, fs: 'ext4'},
+    ];
+
+    partitions.forEach(p => {
+      const row = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = p.name;
+      row.appendChild(tdName);
+
+      const tdSize = document.createElement('td');
+      tdSize.textContent = `${p.size} GB`;
+      row.appendChild(tdSize);
+
+      const tdFs = document.createElement('td');
+      tdFs.textContent = p.fs;
+      row.appendChild(tdFs);
+
+      resultBody.appendChild(row);
+    });
+
+    resultDiv.style.display = 'block';
+  });
+</script>
+  <footer style="text-align:center; color:#777; font-size:0.9rem; margin: 2rem 0 1rem 0;">
+    Juan Jara
+  </footer>
+</body>
+</html>
