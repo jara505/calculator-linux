@@ -21,9 +21,12 @@ const EFI_SIZE_GB = 0.5;
 const MIN_DISK_GB = 10;
 const MIN_HOME_GB = 5;
 
-function calculateSwap(ramSize, diskSize) {
+function calculateSwap(ramSize, diskSize, hibernate) {
   let swapSize;
-  if (ramSize <= 4) {
+
+  if (hibernate) {
+    swapSize = Math.ceil(ramSize * 1.5);
+  } else if (ramSize <= 4) {
     swapSize = ramSize * 2;
   } else if (ramSize <= 16) {
     swapSize = Math.min(ramSize, 8);
@@ -32,7 +35,7 @@ function calculateSwap(ramSize, diskSize) {
   }
 
   const maxSwap = Math.floor(diskSize * 0.2);
-  if (swapSize > maxSwap) {
+  if (!hibernate && swapSize > maxSwap) {
     swapSize = maxSwap;
   }
 
@@ -67,7 +70,8 @@ form.addEventListener('submit', e => {
     return;
   }
 
-  const swapSize = calculateSwap(ramSize, diskSize);
+  const hibernate = document.getElementById('hibernate').checked;
+  const swapSize = calculateSwap(ramSize, diskSize, hibernate);
   const rootSize = calculateRoot(diskSize);
   const homeSize = diskSize - EFI_SIZE_GB - swapSize - rootSize;
 
@@ -77,25 +81,49 @@ form.addEventListener('submit', e => {
   }
 
   const partitions = [
-    { name: '/boot/efi', size: EFI_SIZE_GB, fs: 'FAT32' },
-    { name: 'swap', size: swapSize, fs: 'swap' },
-    { name: '/', size: rootSize, fs: 'ext4' },
-    { name: '/home', size: homeSize, fs: 'ext4' },
+    { name: '/boot/efi', size: EFI_SIZE_GB, fs: 'FAT32', color: '#ff9800' },
+    { name: 'swap', size: swapSize, fs: 'swap', color: '#f44336' },
+    { name: '/', size: rootSize, fs: 'ext4', color: '#2196f3' },
+    { name: '/home', size: homeSize, fs: 'ext4', color: '#78909c' },
   ];
 
+  const diskBar = document.getElementById('diskBar');
+  const diskLegend = document.getElementById('diskLegend');
+  diskBar.innerHTML = '';
+  diskLegend.innerHTML = '';
+
   partitions.forEach(p => {
+    const pct = (p.size / diskSize) * 100;
+    const sizeLabel = p.size < 1 ? `${p.size * 1024} MB` : `${p.size} GB`;
+
+    const segment = document.createElement('div');
+    segment.className = 'disk-bar-segment';
+    segment.style.width = `${pct}%`;
+    segment.style.backgroundColor = p.color;
+    segment.textContent = pct > 8 ? p.name : '';
+    segment.title = `${p.name} — ${sizeLabel} (${pct.toFixed(1)}%)`;
+    diskBar.appendChild(segment);
+
+    const legendItem = document.createElement('div');
+    legendItem.className = 'disk-legend-item';
+    legendItem.innerHTML = `<span class="disk-legend-color" style="background:${p.color}"></span>${p.name} ${sizeLabel}`;
+    diskLegend.appendChild(legendItem);
+
     const row = document.createElement('tr');
 
     const tdName = document.createElement('td');
     tdName.textContent = p.name;
+    tdName.setAttribute('data-label', 'Partición');
     row.appendChild(tdName);
 
     const tdSize = document.createElement('td');
-    tdSize.textContent = p.size < 1 ? `${p.size * 1024} MB` : `${p.size} GB`;
+    tdSize.textContent = sizeLabel;
+    tdSize.setAttribute('data-label', 'Tamaño');
     row.appendChild(tdSize);
 
     const tdFs = document.createElement('td');
     tdFs.textContent = p.fs;
+    tdFs.setAttribute('data-label', 'Sistema');
     row.appendChild(tdFs);
 
     resultBody.appendChild(row);
