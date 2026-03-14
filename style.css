@@ -1,0 +1,155 @@
+:root {
+  --bg: #121212;
+  --text: #eee;
+  --accent: #4caf50;
+  --input-bg: #1e1e1e;
+  --input-border: #333;
+  --error: #f44336;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  align-items: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+}
+
+form {
+  background: var(--input-bg);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+input[type=number] {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 700;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #388e3c;
+}
+
+.result {
+  margin-top: 1.5rem;
+  background: var(--input-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.result h2 {
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text);
+}
+
+th, td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid #333;
+  text-align: center;
+}
+
+th:first-child, td:first-child {
+  text-align: left;
+}
+
+.error {
+  color: var(--error);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.info-wrapper {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+}
+
+.info-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  width: auto;
+  transition: color 0.3s ease;
+}
+
+.info-btn:hover {
+  color: var(--accent);
+  background: transparent;
+}
+
+.info-tooltip {
+  display: none;
+  position: absolute;
+  top: 2.2rem;
+  right: 0;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text);
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.info-tooltip.visible {
+  display: block;
+}
+
+@media (max-width: 450px) {
+  body {
+    padding: 1rem 0.5rem;
+  }
+  form, .result {
+    max-width: 100%;
+  }
+}
