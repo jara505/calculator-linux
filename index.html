@@ -15,21 +15,30 @@
     <label for="ramSize">Cantidad de RAM (GB, opcional):</label>
     <input type="number" id="ramSize" min="1" step="1" placeholder="Ej: 6" />
 
+    <label class="checkbox-label">
+      <input type="checkbox" id="hibernate" />
+      Soporte para hibernación
+    </label>
+
     <div class="error" id="errorMsg"></div>
     <button type="submit">Calcular</button>
   </form>
 
   <div class="result" id="result" style="display:none;">
     <h2>Recomendación de particiones</h2>
+    <div class="disk-bar" id="diskBar"></div>
+    <div class="disk-legend" id="diskLegend"></div>
     <table>
       <thead>
         <tr><th>Partición</th><th>Tamaño recomendado</th><th>Sistema de archivos</th></tr>
       </thead>
       <tbody id="resultBody"></tbody>
     </table>
-    <p style="margin-top: 0.8rem; font-size: 0.9rem; color: #aaa;">
-      Nota: <code>/boot/efi</code> es necesaria en sistemas UEFI. <code>/</code> es la partición raíz del sistema.
-    </p>
+    <ul class="notes">
+      <li><code>/boot/efi</code> — Necesaria en sistemas UEFI.</li>
+      <li><code>/</code> — Partición raíz del sistema.</li>
+      <li><code>/home</code> — Archivos personales del usuario.</li>
+    </ul>
   </div>
 
   <div class="info-wrapper">
